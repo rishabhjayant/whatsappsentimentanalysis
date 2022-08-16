@@ -1,0 +1,12 @@
+streamlit
+pandas
+sklearn
+matplotlib
+seaborn
+URLExtract
+WordCloud
+Counter
+emojis
+datetime
+
+
