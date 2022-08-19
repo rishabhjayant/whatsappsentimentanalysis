@@ -46,31 +46,36 @@ def preprocess(data):
         df['day_name'] = df['time'].dt.day_name()
         standardtime=[]
         for i, j in df.iterrows():
-            if j['am_pm'] == 'pm':
+            if j['am_pm'] == 'pm' and j['hour']==12:
+                standardtime.append(j['hour'])
+            elif j['am_pm'] == 'pm' and j['hour']!=12:
+
                 standardtime.append(j['hour']+12)
+            elif j['am_pm'] == 'am' and j['hour'] == 12:
+                standardtime.append(j['hour']-12)
             else:
                 standardtime.append(j['hour'])
+
+
         df['hour'] = standardtime
 
 
 
 
 
-        period = []
-        for hour in df[['day_name', 'hour']]['hour']:
-            if hour == 23:
-                period.append(str(hour) + "-" + str('00'))
-            elif hour == 0:
-                period.append(str('00') + "-" + str(hour + 1))
-            else:
-                period.append(str(hour) + "-" + str(hour + 1))
-
-        df['period'] = period
+        df['period']=pd.cut(df['hour'],bins=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24])
 
         xtest=cv.transform(df['messages'])
         df['predict']=mnb.predict(xtest)
 
+        real=[]
+        for i,j in df.iterrows():
+            if j['messages']=='<Media omitted>':
+                real.append('neutral')
+            else:
+                real.append(j['predict'])
 
+        df['predict']=real
 
 
 
@@ -111,7 +116,7 @@ def preprocess(data):
         df['day_name'] = df['date'].dt.day_name()
         df['hour'] = df['date'].dt.hour
         df['minute'] = df['date'].dt.minute
-        df['messages'].loc[df['messages'] == '<Media omitted>\n'] = '<Media Omitted>'
+        df['messages'].loc[df['messages'] == '<Media omitted>\n'] = '<Media omitted>'
 
         period = []
         for hour in df[['day_name', 'hour']]['hour']:
@@ -125,5 +130,14 @@ def preprocess(data):
         df['period'] = period
         xtest=cv.transform(df['messages'])
         df['predict']=mnb.predict(xtest)
+
+        real = []
+        for i, j in df.iterrows():
+            if j['messages'] == '<Media omitted>':
+                real.append('neutral')
+            else:
+                real.append(j['predict'])
+
+        df['predict'] = real
 
     return df
